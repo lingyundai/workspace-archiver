@@ -1,26 +1,68 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from 'vscode'
+import * as fs from 'fs'
+import * as path from 'path'
+import ignore, { Ignore } from 'ignore'
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  let disposable = vscode.commands.registerCommand('codesnapshot.helloWorld', () => {
+    const projectDir = vscode.workspace.rootPath?.toString() ?? ''
+    const outputFile = path.join(projectDir, 'code_context.txt')
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "codesnapshot" is now active!');
+    fs.existsSync(outputFile) && fs.unlinkSync(outputFile)
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('codesnapshot.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from CodeSnapshot!');
-	});
+    const ig = loadGitignore(projectDir)
 
-	context.subscriptions.push(disposable);
+    const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true })
+    rootEntries.forEach((entry) => {
+      if (entry.isDirectory()) {
+        const dirPath = path.join(projectDir, entry.name)
+        readFiles(dirPath, outputFile, projectDir, ig)
+      }
+    })
+
+    vscode.window.showInformationMessage('Script executed correctly!')
+  })
+
+  context.subscriptions.push(disposable)
 }
 
-// This method is called when your extension is deactivated
+function loadGitignore(projectDir: string) {
+  const gitignorePath = path.join(projectDir, '.gitignore')
+  const ig = ignore()
+  if (fs.existsSync(gitignorePath)) {
+    const gitignoreContent = fs.readFileSync(gitignorePath).toString()
+    ig.add(gitignoreContent)
+  }
+  const fileExtensionsToIgnore = ['jpg', 'png', 'gif', 'pdf', 'doc', 'docx', 'svg', 'mp4', 'jpeg']
+
+  fileExtensionsToIgnore.forEach((extension) => {
+    ig.add(`*.${extension}`) // Ignore files with the given extension
+  })
+  ig.add('.*') // Ignore hidden files
+  return ig
+}
+
+function readFiles(dir: string, outputFile: string, projectDir: string, ig: Ignore) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true })
+
+  entries.forEach((entry: fs.Dirent) => {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      readFiles(fullPath, outputFile, projectDir, ig)
+    } else if (entry.isFile()) {
+      appendFileIfNotIgnored(fullPath, outputFile, projectDir, ig)
+    }
+  })
+}
+
+function appendFileIfNotIgnored(fullPath: string, outputFile: string, projectDir: string, ig: Ignore) {
+  const isIgnored = ig.ignores(path.relative(projectDir, fullPath))
+  if (!isIgnored) {
+    const relativePath = path.relative(projectDir, fullPath)
+    fs.appendFileSync(outputFile, `// File: ${relativePath}\n`)
+    fs.appendFileSync(outputFile, fs.readFileSync(fullPath))
+    fs.appendFileSync(outputFile, '\n')
+  }
+}
+
 export function deactivate() {}
