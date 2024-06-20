@@ -5,28 +5,38 @@ import ignore, { Ignore } from "ignore";
 
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand(
-    "codesnapshot.helloWorld",
+    "codesnapshot.generateCodeContext",
     () => {
-      const projectDir = vscode.workspace.rootPath?.toString() ?? "";
-      const outputFile = path.join(projectDir, "code_context.txt");
-
-      fs.existsSync(outputFile) && fs.unlinkSync(outputFile);
-
-      const ig = loadGitignore(projectDir);
-
-      const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true });
-      rootEntries.forEach((entry) => {
-        if (entry.isDirectory()) {
-          const dirPath = path.join(projectDir, entry.name);
-          readFiles(dirPath, outputFile, projectDir, ig);
-        }
-      });
-
-      vscode.window.showInformationMessage("Script executed correctly!");
+      generateCodeContext();
+      vscode.window.showInformationMessage(
+        "Code Context Generated Successfully!"
+      );
     }
   );
 
   context.subscriptions.push(disposable);
+
+  vscode.workspace.onDidSaveTextDocument(() => {
+    generateCodeContext();
+    vscode.window.showInformationMessage("Code Context Updated.");
+  });
+}
+
+function generateCodeContext() {
+  const projectDir = vscode.workspace.rootPath?.toString() ?? "";
+  const outputFile = path.join(projectDir, "codeSnapshot.txt");
+
+  fs.existsSync(outputFile) && fs.unlinkSync(outputFile);
+
+  const ig = loadGitignore(projectDir);
+
+  const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true });
+  rootEntries.forEach((entry) => {
+    if (entry.isDirectory()) {
+      const dirPath = path.join(projectDir, entry.name);
+      readFiles(dirPath, outputFile, projectDir, ig);
+    }
+  });
 }
 
 function loadGitignore(projectDir: string) {
@@ -46,6 +56,9 @@ function loadGitignore(projectDir: string) {
     "svg",
     "mp4",
     "jpeg",
+    "ttf",
+    "txt",
+    "ico",
   ];
 
   fileExtensionsToIgnore.forEach((extension) => {

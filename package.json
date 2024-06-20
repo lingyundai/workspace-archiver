@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "codesnapshot.helloWorld",
-        "title": "Hello World"
+        "command": "codesnapshot.generateCodeContext",
+        "title": "Generate Code Snapshot"
       }
     ]
   },
