@@ -9,7 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       generateCodeContext();
       vscode.window.showInformationMessage(
-        "Code Context Generated Successfully!"
+        "Code Snapshot Generated Successfully!"
       );
     }
   );
@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.workspace.onDidSaveTextDocument(() => {
     generateCodeContext();
-    vscode.window.showInformationMessage("Code Context Updated.");
+    vscode.window.showInformationMessage("Code Snapshot Updated.");
   });
 }
 
