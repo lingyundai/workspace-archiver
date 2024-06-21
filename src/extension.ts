@@ -1,44 +1,48 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
-import ignore, { Ignore } from "ignore";
+import * as vscode from 'vscode';
+import * as fs from 'fs'
+import * as path from 'path'
+import ignore, { Ignore } from 'ignore'
+const onWorkspaceLoad = async () => {
+  vscode.window.showInformationMessage('Workspace Loaded!');
+};
 
-export function activate(context: vscode.ExtensionContext) {
-  let disposable = vscode.commands.registerCommand(
-    "codesnapshot.generateCodeContext",
-    () => {
-      generateCodeContext();
-      vscode.window.showInformationMessage(
-        "Code Snapshot Generated Successfully!"
-      );
-    }
-  );
+const onFileSystemChange = async (uri: vscode.Uri) => {
+  const filePath = uri.fsPath;
+  const projectDir = vscode.workspace.rootPath?.toString() ?? ''
+  const outputFile = path.join(projectDir, 'code_context.txt')
 
-  context.subscriptions.push(disposable);
+  // Check if the changed file is code_context.txt and return early if true
+  if (filePath === outputFile) {
+   return;
+  }
 
-  vscode.workspace.onDidSaveTextDocument(() => {
-    generateCodeContext();
-    vscode.window.showInformationMessage("Code Snapshot Updated.");
-  });
-}
+  vscode.window.showInformationMessage(`File Changed: ${filePath}`);
 
-function generateCodeContext() {
-  const projectDir = vscode.workspace.rootPath?.toString() ?? "";
-  const outputFile = path.join(projectDir, "codeSnapshot.txt");
+  fs.existsSync(outputFile) && fs.unlinkSync(outputFile)
 
-  fs.existsSync(outputFile) && fs.unlinkSync(outputFile);
+  const ig = loadGitignore(projectDir)
 
-  const ig = loadGitignore(projectDir);
-
-  const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true });
+  const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true })
   rootEntries.forEach((entry) => {
     if (entry.isDirectory()) {
-      const dirPath = path.join(projectDir, entry.name);
-      readFiles(dirPath, outputFile, projectDir, ig);
+      const dirPath = path.join(projectDir, entry.name)
+      readFiles(dirPath, outputFile, projectDir, ig)
     }
-  });
-}
+  })
 
+  vscode.window.showInformationMessage('Script executed correctly!')
+};
+
+export async function activate(context: vscode.ExtensionContext) {
+  await onWorkspaceLoad();
+
+  const watcher = vscode.workspace.createFileSystemWatcher('**'); // Watch all files recursively
+  watcher.onDidChange(onFileSystemChange)
+  watcher.onDidCreate(onFileSystemChange)
+  watcher.onDidDelete(onFileSystemChange)
+
+  context.subscriptions.push(watcher);
+}
 function loadGitignore(projectDir: string) {
   const gitignorePath = path.join(projectDir, ".gitignore");
   const ig = ignore();
@@ -100,5 +104,5 @@ function appendFileIfNotIgnored(
     fs.appendFileSync(outputFile, "\n");
   }
 }
-
 export function deactivate() {}
+
