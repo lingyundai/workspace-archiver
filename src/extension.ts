@@ -19,7 +19,7 @@ export function activate() {
       );
     } else {
       generateCodeContext();
-      vscode.window.showInformationMessage("workspace Archiver Updated.");
+      vscode.window.showInformationMessage("Workspace Archiver Updated.");
     }
   });
 }
