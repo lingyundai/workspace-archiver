@@ -1,31 +1,25 @@
 {
-  "name": "codesnapshot",
-  "displayName": "CodeSnapshot",
+  "name": "workspace-archiver",
+  "displayName": "Workspace Archiver",
   "description": "Snapshot your codebase to easily communicate with LLM",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "publisher": "AnkitKumar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lingyundai/workspace-archiver"
+  },
   "engines": {
     "vscode": "^1.89.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onStartupFinished" ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "codesnapshot.helloWorld",
-        "title": "Hello World"
-      },
-      {
-        "command": "fileChangeMonitor.showChangePrompt",
-        "title": "File Changed!"
-      },
-      {
-        "command": "fileChangeMonitor.showWorkspaceLoadedPrompt",
-        "title": "Workspace Loaded!"
-      }
-    ]
+    "commands": []
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -41,7 +35,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.89.0",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
     "@vscode/test-cli": "^0.0.9",
@@ -54,5 +48,6 @@
   },
   "dependencies": {
     "ignore": "^5.3.1"
-  }
+  },
+  "pricing": "Free"
 }

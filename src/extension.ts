@@ -1,74 +1,135 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs'
-import * as path from 'path'
-import ignore, { Ignore } from 'ignore'
-const onWorkspaceLoad = async () => {
-  vscode.window.showInformationMessage('Workspace Loaded!');
-};
+import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
+import ignore, { Ignore } from "ignore";
 
-const onFileSystemChange = async (uri: vscode.Uri) => {
-  const filePath = uri.fsPath;
-  const projectDir = vscode.workspace.rootPath?.toString() ?? ''
-  const outputFile = path.join(projectDir, 'code_context.txt')
+export function activate() {
+  // ensure ignore_files.txt exists when the extension is activated
+  ensureIgnoreFileExists();
 
-  // Check if the changed file is code_context.txt and return early if true
-  if (filePath === outputFile) {
-   return;
+  // check if workspace archiver file exist, only prompt user for generation
+  // if not exist
+  checkArchiverTxt();
+
+  vscode.workspace.onDidSaveTextDocument((document) => {
+    if (document.fileName.endsWith("ignore_files.txt")) {
+      generateCodeContext();
+      vscode.window.showInformationMessage(
+        "Workspace Archiver Generated Successfully!"
+      );
+    } else {
+      generateCodeContext();
+      vscode.window.showInformationMessage("Workspace Archiver Updated.");
+    }
+  });
+}
+
+function checkArchiverTxt() {
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (workspaceFolders) {
+    const projectDir = workspaceFolders[0].uri.fsPath;
+    const archiverFilePath = path.join(projectDir, "workspaceArchiver.txt");
+
+    if (!fs.existsSync(archiverFilePath)) {
+      promptUserForWorkspaceArchiver();
+    }
   }
+}
 
-  vscode.window.showInformationMessage(`File Changed: ${filePath}`);
+function openIgnoreFile() {
+  const projectDir = vscode.workspace.rootPath?.toString() ?? "";
+  const ignoreFilePath = path.join(projectDir, "ignore_files.txt");
 
-  fs.existsSync(outputFile) && fs.unlinkSync(outputFile)
+  vscode.workspace.openTextDocument(ignoreFilePath).then((document) => {
+    vscode.window.showTextDocument(document);
+  });
+}
 
-  const ig = loadGitignore(projectDir)
+function promptUserForWorkspaceArchiver() {
+  vscode.window
+    .showInformationMessage(
+      "Would you like to run Workspace Archiver?",
+      "Yes",
+      "No"
+    )
+    .then((selection) => {
+      if (selection === "Yes") {
+        openIgnoreFile();
+        vscode.window.showInformationMessage(
+          "Please enter files you would like to ignore."
+        );
+      }
+    });
+}
 
-  const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true })
+function ensureIgnoreFileExists() {
+  const projectDir = vscode.workspace.rootPath?.toString() ?? "";
+  const ignoreFilePath = path.join(projectDir, "ignore_files.txt");
+  if (!fs.existsSync(ignoreFilePath)) {
+    const defaultContent = [
+      "# To ignore files with specific extensions, add them like this: *.log",
+      "# Please make sure to ignore binary or unsupported text encoding files",
+      "node_modules/",
+      "dist/",
+      "build/",
+      "package-lock.json",
+      "yarn.lock",
+      "tsconfig.json",
+      "*.svg",
+      "*.png",
+      "*.jpg",
+      "*.jpeg",
+      "*.gif",
+      "*.ico",
+      "*.webp",
+      "*.eot",
+      "*.ttf",
+      "// Add more files and folders here...",
+      "\n",
+    ].join("\n");
+    fs.writeFileSync(ignoreFilePath, defaultContent);
+  }
+}
+
+function generateCodeContext() {
+  const projectDir = vscode.workspace.rootPath?.toString() ?? "";
+  const outputFile = path.join(projectDir, "workspaceArchiver.txt");
+
+  fs.existsSync(outputFile) && fs.unlinkSync(outputFile);
+
+  const ig = loadGitignore(projectDir);
+  ig.add(".*/"); // Ignore all hidden files and folders
+
+  const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true });
   rootEntries.forEach((entry) => {
     if (entry.isDirectory()) {
       const dirPath = path.join(projectDir, entry.name)
       readFiles(dirPath, outputFile, projectDir, ig)
     }
-  })
-
-  vscode.window.showInformationMessage('Script executed correctly!')
-};
-
-export async function activate(context: vscode.ExtensionContext) {
-  await onWorkspaceLoad();
-
-  const watcher = vscode.workspace.createFileSystemWatcher('**'); // Watch all files recursively
-  watcher.onDidChange(onFileSystemChange)
-  watcher.onDidCreate(onFileSystemChange)
-  watcher.onDidDelete(onFileSystemChange)
-
-  context.subscriptions.push(watcher);
+  });
 }
+
 function loadGitignore(projectDir: string) {
   const gitignorePath = path.join(projectDir, ".gitignore");
+  const ignoreFilesPath = path.join(projectDir, "ignore_files.txt");
   const ig = ignore();
+
+  // Load .gitignore if it exists
   if (fs.existsSync(gitignorePath)) {
     const gitignoreContent = fs.readFileSync(gitignorePath).toString();
     ig.add(gitignoreContent);
   }
-  const fileExtensionsToIgnore = [
-    "jpg",
-    "png",
-    "gif",
-    "pdf",
-    "doc",
-    "docx",
-    "svg",
-    "mp4",
-    "jpeg",
-    "ttf",
-    "txt",
-    "ico",
-  ];
 
-  fileExtensionsToIgnore.forEach((extension) => {
-    ig.add(`*.${extension}`); // Ignore files with the given extension
-  });
-  ig.add(".*"); // Ignore hidden files
+  // Load Ignore_files.txt
+  if (fs.existsSync(ignoreFilesPath)) {
+    const ignoreFilesContent = fs.readFileSync(ignoreFilesPath).toString();
+    ig.add(
+      ignoreFilesContent
+        .split("\n")
+        .filter((line) => line.trim() && !line.startsWith("#"))
+    );
+  }
+
   return ig;
 }
 
