@@ -6,7 +6,7 @@
   "publisher": "AnkitKumar",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ankitkr8540/CodeSnapshot"
+    "url": "https://github.com/lingyundai/workspace-archiver"
   },
   "engines": {
     "vscode": "^1.89.0"
@@ -14,15 +14,12 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "workspaceArchiver.generateCodeContext",
-        "title": "Generate Workspace Archiver"
-      }
-    ]
+    "commands": []
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
