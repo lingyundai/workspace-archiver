@@ -58,7 +58,12 @@ function promptUserForWorkspaceArchiver() {
         vscode.window.showInformationMessage(
           "Please enter files you would like to ignore."
         );
+      }else if (selection === "No") {
+        // If the user selects "No", stop the extension from running further actions.
+        vscode.window.showInformationMessage("Workspace Archiver will not run.");
+        return; // Early return to stop further execution
       }
+      // If the user closes the prompt without selecting, nothing happens.
     });
 }
 
