@@ -1,8 +1,13 @@
 {
-  "name": "codesnapshot",
-  "displayName": "CodeSnapshot",
+  "name": "workspace-archiver",
+  "displayName": "Workspace Archiver",
   "description": "Snapshot your codebase to easily communicate with LLM",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "publisher": "AnkitKumar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ankitkr8540/CodeSnapshot"
+  },
   "engines": {
     "vscode": "^1.89.0"
   },
@@ -14,8 +19,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "codesnapshot.generateCodeContext",
-        "title": "Generate Code Snapshot"
+        "command": "workspaceArchiver.generateCodeContext",
+        "title": "Generate Workspace Archiver"
       }
     ]
   },
@@ -33,7 +38,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.89.0",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
     "@vscode/test-cli": "^0.0.9",
@@ -46,5 +51,6 @@
   },
   "dependencies": {
     "ignore": "^5.3.1"
-  }
+  },
+  "pricing": "Free"
 }
