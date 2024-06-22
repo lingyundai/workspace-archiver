@@ -3,23 +3,25 @@ import * as fs from "fs";
 import * as path from "path";
 import ignore, { Ignore } from "ignore";
 
-export function activate() {
-  // ensure ignore_files.txt exists when the extension is activated
-  ensureIgnoreFileExists();
+// Step 1: Add a global flag
+let shouldGenerateArchiver = false;
 
+export function activate() {
   // check if workspace archiver file exist, only prompt user for generation
   // if not exist
   checkArchiverTxt();
 
   vscode.workspace.onDidSaveTextDocument((document) => {
-    if (document.fileName.endsWith("ignore_files.txt")) {
-      generateCodeContext();
-      vscode.window.showInformationMessage(
-        "Workspace Archiver Generated Successfully!"
-      );
-    } else {
-      generateCodeContext();
-      vscode.window.showInformationMessage("Workspace Archiver Updated.");
+    if(shouldGenerateArchiver){
+      if (document.fileName.endsWith("ignore_files.txt")) {
+        generateCodeContext();
+        vscode.window.showInformationMessage(
+          "Workspace Archiver Generated Successfully!"
+        );
+      } else {
+        generateCodeContext();
+        vscode.window.showInformationMessage("Workspace Archiver Updated.");
+      }
     }
   });
 }
@@ -54,11 +56,21 @@ function promptUserForWorkspaceArchiver() {
     )
     .then((selection) => {
       if (selection === "Yes") {
+        // Step 2: Update flag on user choice
+        shouldGenerateArchiver = true;
+        // ensure ignore_files.txt exists when the extension is activated
+        ensureIgnoreFileExists();
         openIgnoreFile();
         vscode.window.showInformationMessage(
           "Please enter files you would like to ignore."
         );
+      }else if (selection === "No") {
+        shouldGenerateArchiver = false;
+        // If the user selects "No", stop the extension from running further actions.
+        vscode.window.showInformationMessage("Workspace Archiver will not run.");
+        return; // Early return to stop further execution
       }
+      // If the user closes the prompt without selecting, nothing happens.
     });
 }
 
@@ -103,8 +115,8 @@ function generateCodeContext() {
   const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true });
   rootEntries.forEach((entry) => {
     if (entry.isDirectory()) {
-      const dirPath = path.join(projectDir, entry.name);
-      readFiles(dirPath, outputFile, projectDir, ig);
+      const dirPath = path.join(projectDir, entry.name)
+      readFiles(dirPath, outputFile, projectDir, ig)
     }
   });
 }
@@ -165,5 +177,5 @@ function appendFileIfNotIgnored(
     fs.appendFileSync(outputFile, "\n");
   }
 }
-
 export function deactivate() {}
+
