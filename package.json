@@ -2,7 +2,7 @@
   "name": "workspace-archiver",
   "displayName": "Workspace Archiver",
   "description": "Snapshot your codebase to easily communicate with LLM",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "publisher": "AnkitKumar",
   "repository": {
