@@ -2,9 +2,10 @@
   "name": "workspace-archiver",
   "displayName": "Workspace Archiver",
   "description": "Snapshot your codebase to easily communicate with LLM",
-  "version": "1.1.0",
+  "version": "1.0.1",
   "license": "MIT",
   "publisher": "AnkitKumar",
+  "icon": "/workspace-archiver-logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/lingyundai/workspace-archiver"
