@@ -16,14 +16,14 @@ export function activate(context: vscode.ExtensionContext) {
   // Create the status bar item once
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.command = 'extension.toggleArchiver';
-  statusBarItem.text = 'Deactivate Workspace Archiver';
+  // statusBarItem.text = 'Activate Workspace Archiver';
   context.subscriptions.push(statusBarItem);
   statusBarItem.show(); // Show the status bar item initially
 
   context.subscriptions.push(
     vscode.commands.registerCommand('extension.toggleArchiver', () => {
       shouldGenerateArchiver = !shouldGenerateArchiver;
-      statusBarItem.text = shouldGenerateArchiver ? 'Deactivate Workspace Archiver' : 'Reactivate Workspace Archiver';
+      // statusBarItem.text = shouldGenerateArchiver ? 'Deactivate Workspace Archiver' : 'Reactivate Workspace Archiver';
       if (shouldGenerateArchiver) {
         promptUserForWorkspaceArchiver();
       } else {
@@ -63,10 +63,15 @@ function promptUserForWorkspaceArchiver() {
   ).then(selection => {
     if (selection === 'Yes') {
       shouldGenerateArchiver = true;
+      statusBarItem.text = 'Deactivate Workspace Archiver'; // Update the status bar item text
       ensureIgnoreFileExists();
     } else if (selection === 'No') {
       shouldGenerateArchiver = false;
       statusBarItem.text = 'Reactivate Workspace Archiver'; // Update the status bar item text
+    }
+    else {
+      vscode.window.showInformationMessage('Workspace Archiver is deactivated.');
+      deactivateArchiver();
     }
   });
 }
